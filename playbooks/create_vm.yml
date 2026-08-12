@@ -1,0 +1,50 @@
+---
+- name: Create first VM on Nutanix
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    nutanix_host: "{{ lookup('env', 'NUTANIX_HOST') }}"
+    nutanix_username: "{{ lookup('env', 'NUTANIX_USERNAME') }}"
+    nutanix_password: "{{ lookup('env', 'NUTANIX_PASSWORD') }}"
+
+    vm_name: "aap-test-vm01"
+    cluster_name: "Lux"
+    subnet_name: "LAB-NETWORK"
+
+  tasks:
+    - name: Create VM
+      nutanix.ncp.ntnx_vms:
+        nutanix_host: "{{ nutanix_host }}"
+        nutanix_username: "{{ nutanix_username }}"
+        nutanix_password: "{{ nutanix_password }}"
+        validate_certs: false
+
+        state: present
+        name: "{{ vm_name }}"
+
+        cluster:
+          name: "{{ cluster_name }}"
+
+        vcpus: 1
+        cores_per_vcpu: 1
+        memory_gb: 1
+
+        disks:
+          - type: DISK
+            size_gb: 20
+            bus: SCSI
+
+        networks:
+          - is_connected: true
+            subnet:
+              name: "{{ subnet_name }}"
+              cluster:
+                name: "{{ cluster_name }}"
+
+      register: vm_result
+
+    - name: Show VM creation result
+      ansible.builtin.debug:
+        var: vm_result
