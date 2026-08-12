@@ -1,0 +1,39 @@
+---
+- name: Deploy Nutanix VM using Terraform
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  environment:
+    TF_VAR_nutanix_endpoint: "{{ lookup('env', 'NUTANIX_HOST') }}"
+    TF_VAR_nutanix_username: "{{ lookup('env', 'NUTANIX_USERNAME') }}"
+    TF_VAR_nutanix_password: "{{ lookup('env', 'NUTANIX_PASSWORD') }}"
+
+  tasks:
+    - name: Terraform init
+      ansible.builtin.command:
+        cmd: terraform init -input=false
+        chdir: "{{ playbook_dir }}/../terraform/pe-test"
+      register: terraform_init
+      changed_when: false
+
+    - name: Terraform plan
+      ansible.builtin.command:
+        cmd: terraform plan -input=false -out=tfplan
+        chdir: "{{ playbook_dir }}/../terraform/pe-test"
+      register: terraform_plan
+      changed_when: false
+
+    - name: Show Terraform plan
+      ansible.builtin.debug:
+        var: terraform_plan.stdout_lines
+
+    - name: Terraform apply
+      ansible.builtin.command:
+        cmd: terraform apply -input=false -auto-approve tfplan
+        chdir: "{{ playbook_dir }}/../terraform/pe-test"
+      register: terraform_apply
+
+    - name: Show Terraform result
+      ansible.builtin.debug:
+        var: terraform_apply.stdout_lines
