@@ -1,0 +1,16 @@
+---
+- name: Test Terraform EE
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Show Terraform version
+      ansible.builtin.command:
+        cmd: terraform version
+      register: tf_version
+      changed_when: false
+
+    - name: Display Terraform version
+      ansible.builtin.debug:
+        var: tf_version.stdout_lines
