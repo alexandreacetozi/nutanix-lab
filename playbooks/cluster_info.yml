@@ -1,0 +1,33 @@
+---
+- name: Query Nutanix cluster from AAP
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    prism_host: "{{ lookup('env', 'NUTANIX_HOST') }}"
+    prism_username: "{{ lookup('env', 'NUTANIX_USERNAME') }}"
+    prism_password: "{{ lookup('env', 'NUTANIX_PASSWORD') }}"
+
+  tasks:
+    - name: Query Prism cluster API
+      ansible.builtin.uri:
+        url: "https://{{ prism_host }}:9440/api/nutanix/v3/clusters/list"
+        method: POST
+        user: "{{ prism_username }}"
+        password: "{{ prism_password }}"
+        force_basic_auth: true
+        validate_certs: false
+        body_format: json
+        body:
+          kind: cluster
+        status_code: 200
+        return_content: true
+      register: cluster_result
+
+    - name: Show cluster information
+      ansible.builtin.debug:
+        msg:
+          - "Cluster: {{ cluster_result.json.entities[0].status.name }}"
+          - "AOS: {{ cluster_result.json.entities[0].status.resources.config.software_map.NOS.version }}"
+          - "State: {{ cluster_result.json.entities[0].status.state }}"
